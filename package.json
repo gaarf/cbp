@@ -1,0 +1,8 @@
+{
+  "name": "cbp",
+  "version": "1.0.0",
+  "description": "cb cli",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true
+}

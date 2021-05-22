@@ -1,12 +1,15 @@
 import dotenv from "dotenv";
 import Vorpal from "vorpal";
 import { Account, CoinbasePro } from "coinbase-pro-node";
-import Table from "tty-table";
 import BigNumber from "bignumber.js";
+import table from "./table";
+import type { Question } from "inquirer";
 
 dotenv.config();
 const { API_KEY, API_SECRET, API_PASSPHRASE } = process.env;
+
 const cli = new Vorpal();
+
 const cbp = new CoinbasePro({
   apiKey: String(API_KEY),
   apiSecret: String(API_SECRET),
@@ -14,40 +17,11 @@ const cbp = new CoinbasePro({
   useSandbox: false,
 });
 
-function printTable<T>(a: T[], ...keys: Array<keyof T>) {
-  const ks = keys.length ? keys.map(String) : Object.keys(a[0]);
-  cli.log(
-    Table(
-      ks.map<Table.Header>((k) => ({
-        value: k,
-        width: "auto",
-        align: "right",
-        headerAlign: "right",
-        formatter(o) {
-          if (k.endsWith("_at")) {
-            return new Date(o).toLocaleString();
-          }
-          if (k.endsWith("_id")) {
-            return o;
-          }
-          return isNaN(o) ? o : new BigNumber(o).toFixed(8);
-        },
-      })),
-      a
-    ).render()
-  );
-}
-
-type Cache = {
-  accounts: Account[];
-};
-
-const cache: Cache = {
-  accounts: [],
-};
+const accounts: Record<string, Account> = {};
 
 async function fetchAccounts() {
-  cache.accounts = await cbp.rest.account.listAccounts();
+  const a = await cbp.rest.account.listAccounts();
+  a.forEach((o) => (accounts[o.currency] = o));
 }
 
 async function fetchFills(currency: string) {
@@ -64,48 +38,77 @@ async function fetchFills(currency: string) {
     output.push(...result.data);
     hasMore = result.data.length === limit;
     after = result.pagination.after;
-    cli.log(`Fetched ${output.length} fills`);
+    cli.log(`Fetched ${output.length} fills${hasMore ? "..." : "."}`);
   }
   return output;
 }
 
 cli
-  .command("list", "List your accounts")
-  .alias("show")
-  .action(async function () {
-    printTable(
-      cache.accounts.filter((a) => new BigNumber(a.balance).gt(0.01)),
-      "currency",
-      "balance"
+  .command("balance", "List your positive balance accounts")
+  .alias("list")
+  .action(async function (this: Vorpal.CommandInstance) {
+    this.log(
+      table(
+        Object.values(accounts).filter((a) =>
+          new BigNumber(a.balance).gt(0.01)
+        ),
+        "currency",
+        "balance"
+      )
     );
   });
 
-cli.catch("<coin>", "Compute averages").action(async function (this: Vorpal.CommandInstance, args) {
-  const account = cache.accounts.find(
-    (o) => o.currency === args.coin.toUpperCase()
-  );
-  if (!account || account.currency === "USD") {
-    this.log("No such coin!");
-    return;
-  }
-  printTable([account], "id", "balance", "available");
-  const fills = await fetchFills(account.currency);
-  if (fills.length === 0) {
-    throw new Error("No fills found!");
-  }
-  printTable(
-    fills,
-    "created_at",
-    "trade_id",
-    "side",
-    "price",
-    "size",
-    "fee",
-    "usd_volume"
-  );
-});
+cli
+  .command("ask", "Prompt with a list")
+  .action(async function (this: Vorpal.CommandInstance) {
+    const result = await this.prompt({
+      name: "coin",
+      type: "list",
+      message: "Which coin?",
+      choices: Object.keys(accounts),
+    } as Question);
+    cli.exec(result.coin);
+  });
+
+cli
+  .catch("<coin>", "Compute averages")
+  .action(async function (this: Vorpal.CommandInstance, { coin }) {
+    const account = accounts[coin.toUpperCase()];
+    if(!account || account.currency === "USD") {
+      this.log(`${account.currency} is not a traded coin!`);
+      return;
+    }
+
+    this.log(table([account], "id", "hold", "available"));
+
+    const fills = await fetchFills(account.currency);
+    if (fills.length === 0) {
+      throw new Error("No fills found!");
+    }
+    this.log(
+      table(
+        fills,
+        "created_at",
+        "trade_id",
+        "side",
+        "price",
+        "size",
+        "fee",
+        "usd_volume"
+      )
+    );
+  });
 
 fetchAccounts().then(() => {
-  cli.log(`😎 Cached ${cache.accounts.length} accounts`);
-  cli.delimiter("cbp$").show();
+  cli.log(`😎 ${Object.keys(accounts).length} accounts`);
+  const [a, b, ...c] = process.argv;
+  if (c.length) {
+    cli
+      .delimiter("")
+      .show()
+      .exec(c.join(" "))
+      .then(() => process.exit());
+  } else {
+    cli.delimiter("cbp$").show();
+  }
 });

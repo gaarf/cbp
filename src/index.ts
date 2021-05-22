@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import Vorpal from "vorpal";
 import { Account, CoinbasePro } from "coinbase-pro-node";
 import Table from "tty-table";
-import Big from "big.js";
+import BigNumber from "bignumber.js";
 
 dotenv.config();
 const { API_KEY, API_SECRET, API_PASSPHRASE } = process.env;
@@ -30,7 +30,7 @@ function printTable<T>(a: T[], ...keys: Array<keyof T>) {
           if (k.endsWith("_id")) {
             return o;
           }
-          return isNaN(o) ? o : new Big(o).toFixed(8);
+          return isNaN(o) ? o : new BigNumber(o).toFixed(8);
         },
       })),
       a
@@ -74,7 +74,7 @@ cli
   .alias("show")
   .action(async function () {
     printTable(
-      cache.accounts.filter((a) => new Big(a.balance).gt(0.01)),
+      cache.accounts.filter((a) => new BigNumber(a.balance).gt(0.01)),
       "currency",
       "balance"
     );

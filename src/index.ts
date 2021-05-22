@@ -1,8 +1,8 @@
 import dotenv from "dotenv";
-import Vorpal from "vorpal";
+import Vorpal, { Args } from "vorpal";
 import { Account, CoinbasePro } from "coinbase-pro-node";
 import BigNumber from "bignumber.js";
-import table from "./table";
+import { table, timeAgo } from "./util";
 import type { Question } from "inquirer";
 
 dotenv.config();
@@ -38,14 +38,44 @@ async function fetchFills(currency: string) {
     output.push(...result.data);
     hasMore = result.data.length === limit;
     after = result.pagination.after;
-    cli.log(`Fetched ${output.length} fills${hasMore ? "..." : "."}`);
+    cli.log(hasMore ? "fetching..." : `🐶 ${output.length} fills`);
   }
   return output;
 }
 
+async function computeAverage(this: Vorpal.CommandInstance, { coin }: Args) {
+  const COIN = coin.toUpperCase();
+  const account = accounts[COIN];
+  if (!account || COIN === "USD") {
+    this.log(`❌ ${COIN} is not a traded coin!`);
+    return;
+  }
+
+  this.log(table([account], "currency", "hold", "available"));
+
+  const fills = await fetchFills(account.currency);
+  if (fills.length === 0) {
+    return;
+  }
+
+  this.log("Oldest:", timeAgo(fills[fills.length - 1].created_at));
+  this.log("Latest:", timeAgo(fills[0].created_at));
+}
+
+cli
+  .command("list", "List all coins")
+  .action(async function (this: Vorpal.CommandInstance) {
+    this.log(
+      table(
+        Object.values(accounts),
+        'currency',
+        'id'
+      )
+    );
+  });
+
 cli
   .command("balance", "List your positive balance accounts")
-  .alias("list")
   .action(async function (this: Vorpal.CommandInstance) {
     this.log(
       table(
@@ -59,55 +89,25 @@ cli
   });
 
 cli
-  .command("ask", "Prompt with a list")
+  .command("prompt", "Prompt from the list of coins")
   .action(async function (this: Vorpal.CommandInstance) {
-    const result = await this.prompt({
+    const { coin } = await this.prompt({
       name: "coin",
       type: "list",
       message: "Which coin?",
       choices: Object.keys(accounts),
     } as Question);
-    cli.exec(result.coin);
+    await cli.execSync(coin);
   });
 
-cli
-  .catch("<coin>", "Compute averages")
-  .action(async function (this: Vorpal.CommandInstance, { coin }) {
-    const account = accounts[coin.toUpperCase()];
-    if(!account || account.currency === "USD") {
-      this.log(`${account.currency} is not a traded coin!`);
-      return;
-    }
-
-    this.log(table([account], "id", "hold", "available"));
-
-    const fills = await fetchFills(account.currency);
-    if (fills.length === 0) {
-      throw new Error("No fills found!");
-    }
-    this.log(
-      table(
-        fills,
-        "created_at",
-        "trade_id",
-        "side",
-        "price",
-        "size",
-        "fee",
-        "usd_volume"
-      )
-    );
-  });
+cli.command("average <coin>", "Compute average cost").action(computeAverage);
+cli.catch("<coin>").action(computeAverage);
 
 fetchAccounts().then(() => {
   cli.log(`😎 ${Object.keys(accounts).length} accounts`);
   const [a, b, ...c] = process.argv;
   if (c.length) {
-    cli
-      .delimiter("")
-      .show()
-      .exec(c.join(" "))
-      .then(() => process.exit());
+    cli.exec(c.join(" ")).then(() => process.exit());
   } else {
     cli.delimiter("cbp$").show();
   }

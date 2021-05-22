@@ -2,7 +2,24 @@
   "name": "cbp",
   "version": "1.0.0",
   "description": "cb cli",
-  "main": "index.js",
+  "main": "out/index.js",
   "license": "MIT",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "big.js": "^6.1.1",
+    "coinbase-pro-node": "^3.0.1",
+    "dotenv": "^8.2.0",
+    "ts-node": "^9.1.1",
+    "tty-table": "^4.1.3",
+    "vorpal": "^1.12.0"
+  },
+  "devDependencies": {
+    "@types/big.js": "^6.1.0",
+    "@types/node": "^14.14.41",
+    "@types/vorpal": "^1.12.0",
+    "typescript": "^4.2.4"
+  },
+  "scripts": {
+    "start": "ts-node src/index.ts"
+  }
 }

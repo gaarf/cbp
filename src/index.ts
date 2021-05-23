@@ -65,7 +65,7 @@ async function computeAverage(this: Vorpal.CommandInstance, { coin }: Args) {
 }
 
 cli
-  .command("list", "List supported coins")
+  .command("list", "List supported accounts")
   .option("--all", "Include empty balance")
   .action(async function (this: Vorpal.CommandInstance, args) {
     this.log(

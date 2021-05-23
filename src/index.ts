@@ -1,9 +1,10 @@
 import dotenv from "dotenv";
 import Vorpal, { Args } from "vorpal";
-import { Account, CoinbasePro } from "coinbase-pro-node";
+import { Account, CoinbasePro, RESTClient } from "coinbase-pro-node";
 import BigNumber from "bignumber.js";
 import { table, createdTimeAgo, statsTable } from "./util";
 import type { Question } from "inquirer";
+import { exec } from "child_process";
 
 dotenv.config();
 const { API_KEY, API_SECRET, API_PASSPHRASE } = process.env;
@@ -19,11 +20,22 @@ const cbp = new CoinbasePro({
 
 const accounts: Record<string, Account> = {};
 
+const coinQuestion: Question = {
+  name: "coin",
+  message: "Which coin?",
+  default: "BTC",
+  filter: (coin) => coin.toUpperCase(),
+};
+
 async function fetchAccounts() {
   const a = await cbp.rest.account.listAccounts();
   a.filter((o) => !o.currency.startsWith("USD")).forEach(
     (o) => (accounts[o.currency] = o)
   );
+  Object.assign(coinQuestion, {
+    type: "list",
+    choices: Object.keys(accounts),
+  });
 }
 
 async function fetchFills(currency: string) {
@@ -59,13 +71,57 @@ async function computeAverage(this: Vorpal.CommandInstance, { coin }: Args) {
     return;
   }
 
-  this.log("Oldest:", createdTimeAgo(fills[fills.length - 1]));
   this.log("Latest:", createdTimeAgo(fills[0]));
+  this.log("Oldest:", createdTimeAgo(fills[fills.length - 1]));
   this.log(statsTable(fills));
 }
 
 cli
-  .command("list", "List supported accounts")
+  .command("stats [coin]")
+  .option("--euro", "Use Euros instead of US dollars")
+  .action(async function (this: Vorpal.CommandInstance, args) {
+    let coin = args.coin;
+    if (!coin) {
+      const p = await this.prompt(coinQuestion);
+      coin = p.coin;
+    }
+    this.log(
+      table([
+        await cbp.rest.product.getProductStats(
+          `${coin}-${args.options.euro ? "EUR" : "USD"}`
+        ),
+      ])
+    );
+  });
+
+cli
+  .command("orders [coin]")
+  .action(async function (this: Vorpal.CommandInstance, args) {
+    let coin = args.coin;
+    if (!coin) {
+      const p = await this.prompt(coinQuestion);
+      coin = p.coin;
+    }
+    const orders = await cbp.rest.order.getOrders({
+      product_id: accounts[coin.toUpperCase()].id,
+    });
+    this.log(
+      table(orders.data, "product_id", "side", "price", "size", "status")
+    );
+  });
+
+cli.command("fees", "Current fee structure").action(async function (this: Vorpal.CommandInstance, args) {
+  this.log(table([await cbp.rest.fee.getCurrentFees()]));
+});
+
+cli.command("history", "Account history").action(async function (this: Vorpal.CommandInstance) {
+  const { coin } = await this.prompt(coinQuestion);
+  const history = await cbp.rest.account.getAccountHistory(accounts[coin].id);
+  this.log(table(history.data, 'created_at', 'amount', 'type'));
+});
+
+cli
+  .command("list", "List accounts")
   .option("--all", "Include empty balance")
   .action(async function (this: Vorpal.CommandInstance, args) {
     this.log(
@@ -79,26 +135,22 @@ cli
     );
   });
 
-cli
-  .command("prompt", "Prompt from the list of coins")
-  .action(async function (this: Vorpal.CommandInstance) {
-    const { coin } = await this.prompt({
-      name: "coin",
-      type: "list",
-      message: "Which coin?",
-      choices: Object.keys(accounts),
-    } as Question);
-    await cli.execSync(coin);
-  });
-
 cli.command("average <coin>", "Compute average cost").action(computeAverage);
-cli.catch("<coin>").action(computeAverage);
+
+cli.catch("<coin>").action(async function (this: Vorpal.CommandInstance, args) {
+  if (args.coin.toUpperCase() in accounts) {
+    return computeAverage.call(this, args);
+  }
+  cli.exec("help");
+});
 
 fetchAccounts().then(() => {
-  cli.log(`😎 ${Object.keys(accounts).length} supported accounts`);
+  cli.log(`😎 ${Object.keys(accounts).length} accounts`);
   const [a, b, ...c] = process.argv;
   if (c.length) {
-    cli.exec(c.join(" ")).then(() => process.exit());
+    cli.delimiter("").show();
+    cli.exec(c.join(" "));
+    cli.exec("exit");
   } else {
     cli.delimiter("cbp$").show();
   }

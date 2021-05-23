@@ -14,7 +14,7 @@ export function table<T>(a: T[], ...keys: Array<keyof T>) {
       headerAlign: "right",
       formatter(o) {
         if (k.endsWith("_at")) {
-          return new Date(o).toLocaleString();
+          return timeAgo(o);
         }
         switch (k) {
           case "usd_volume":
@@ -22,6 +22,7 @@ export function table<T>(a: T[], ...keys: Array<keyof T>) {
           case "available":
           case "price":
           case "hold":
+          case "amount":
           case "size":
             return new BigNumber(o).toFormat();
           default:
@@ -36,8 +37,12 @@ export function table<T>(a: T[], ...keys: Array<keyof T>) {
   ).render();
 }
 
-export function createdTimeAgo({ created_at: str }: Fill) {
-  return chalk.blue(formatDistanceToNow(new Date(str), { addSuffix: true }));
+function timeAgo(str: string) {
+  return formatDistanceToNow(new Date(str), { addSuffix: true });
+}
+
+export function createdTimeAgo(fill: Fill) {
+  return chalk.blue(timeAgo(fill.created_at));
 }
 
 function bigSum(set: Fill[], key: keyof Fill) {

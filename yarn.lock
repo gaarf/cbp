@@ -10,10 +10,15 @@
     "@types/through" "*"
     rxjs "^6.4.0"
 
-"@types/node@*", "@types/node@^14.14.41":
+"@types/node@*":
   version "14.14.41"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-14.14.41.tgz#d0b939d94c1d7bd53d04824af45f1139b8c45615"
   integrity sha512-dueRKfaJL4RTtSa7bWeTK1M+VH+Gns73oCgzvYfHZywRCoPSd8EkXBL0mZ9unPTveBn+D9phZBaxuzpwjWkW0g==
+
+"@types/node@^15.6.0":
+  version "15.6.0"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-15.6.0.tgz#f0ddca5a61e52627c9dcb771a6039d44694597bc"
+  integrity sha512-gCYSfQpy+LYhOFTKAeE8BkyGqaxmlFxe+n4DKM6DR0wzw/HISUE/hAmkC/KT8Sw5PCJblqg062b3z9gucv3k0A==
 
 "@types/through@*":
   version "0.0.30"
@@ -27,10 +32,10 @@
   resolved "https://registry.yarnpkg.com/@types/vorpal/-/vorpal-1.12.0.tgz#9074d26f6f09d134b99b8fce2ffa0030495e1550"
   integrity sha512-QJpUBEnDySb2W58KpO0d51pedxFzKQS9AmeSIryIZUpYTpucXAHzGQWbaQWoQvfqX8dKyqkcBgdNQNv3FakB3w==
 
-"@types/ws@7.4.0":
-  version "7.4.0"
-  resolved "https://registry.yarnpkg.com/@types/ws/-/ws-7.4.0.tgz#499690ea08736e05a8186113dac37769ab251a0e"
-  integrity sha512-Y29uQ3Uy+58bZrFLhX36hcI3Np37nqWE7ky5tjiDoy1GDZnIwVxS0CgF+s+1bXMzjKBFy+fqaRfb708iNzdinw==
+"@types/ws@7.4.1":
+  version "7.4.1"
+  resolved "https://registry.yarnpkg.com/@types/ws/-/ws-7.4.1.tgz#49eacb15a0534663d53a36fbf5b4d98f5ae9a73a"
+  integrity sha512-ISCK1iFnR+jYv7+jLNX0wDqesZ/5RAeY3wUx6QaphmocphU61h+b+PHjS18TF4WIPTu/MMzxIq2PHr32o2TS5Q==
   dependencies:
     "@types/node" "*"
 
@@ -214,19 +219,19 @@ code-point-at@^1.0.0:
   resolved "https://registry.yarnpkg.com/code-point-at/-/code-point-at-1.1.0.tgz#0d070b4d043a5bea33a2f1a40e2edb3d9a4ccf77"
   integrity sha1-DQcLTQQ6W+ozovGkDi7bPZpMz3c=
 
-coinbase-pro-node@^3.0.1:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/coinbase-pro-node/-/coinbase-pro-node-3.0.1.tgz#a3e0eb888be301d599cb7795b67ae12b82a146d8"
-  integrity sha512-KQha0No80EkxSKzJ1jBoFyTqRB7a7N+YXvEOvnZDa5Zgkyp7fVsQGtyf/gw0xwN29WDZmOFV989daD+HoNKwwA==
+coinbase-pro-node@^3.0.4:
+  version "3.0.4"
+  resolved "https://registry.yarnpkg.com/coinbase-pro-node/-/coinbase-pro-node-3.0.4.tgz#749f427d1553b28fd57bac767c4783932cb0b6fd"
+  integrity sha512-fL86M/rp2LK3e+HtKa+YQ0H+Hjyo8BWuUIIkx6LwE5g8iM97nm47HNhqiSyrBhXqV9CBpvG4f6kR0Z9H0mVIHg==
   dependencies:
-    "@types/ws" "7.4.0"
+    "@types/ws" "7.4.1"
     axios "0.21.1"
     axios-retry "3.1.9"
     buffer "6.0.3"
     bufferutil "4.0.3"
     reconnecting-websocket "4.4.0"
     utf-8-validate "5.0.4"
-    ws "7.4.4"
+    ws "7.4.5"
 
 color-convert@^2.0.1:
   version "2.0.1"
@@ -304,10 +309,10 @@ diff@^4.0.1:
   resolved "https://registry.yarnpkg.com/diff/-/diff-4.0.2.tgz#60f3aecb89d5fae520c11aa19efc2bb982aade7d"
   integrity sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==
 
-dotenv@^8.2.0:
-  version "8.2.0"
-  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-8.2.0.tgz#97e619259ada750eea3e4ea3e26bceea5424b16a"
-  integrity sha512-8sJ78ElpbDJBHNeBzUbUVLsqKdccaa/BXF1uPTw3GrvQTBgrQrtObr2mUrE38vzYd8cEv+m/JBfDLioYcfXoaw==
+dotenv@^10.0.0:
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-10.0.0.tgz#3d4227b8fb95f81096cdd2b66653fb2c7085ba81"
+  integrity sha512-rlBi9d8jpv9Sf1klPjNfFAuWDjKLwTIJJ/VxtoTwIR6hnZxcEOQCZg2oIL3MWBYw5GpUDKOEnND7LXTbIpQ03Q==
 
 emoji-regex@^8.0.0:
   version "8.0.0"
@@ -928,10 +933,10 @@ wrappy@1:
   resolved "https://registry.yarnpkg.com/wrappy/-/wrappy-1.0.2.tgz#b5243d8f3ec1aa35f1364605bc0d1036e30ab69f"
   integrity sha1-tSQ9jz7BqjXxNkYFvA0QNuMKtp8=
 
-ws@7.4.4:
-  version "7.4.4"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-7.4.4.tgz#383bc9742cb202292c9077ceab6f6047b17f2d59"
-  integrity sha512-Qm8k8ojNQIMx7S+Zp8u/uHOx7Qazv3Yv4q68MiWWWOJhiwG5W3x7iqmRtJo8xxrciZUY4vRxUTJCKuRnF28ZZw==
+ws@7.4.5:
+  version "7.4.5"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-7.4.5.tgz#a484dd851e9beb6fdb420027e3885e8ce48986c1"
+  integrity sha512-xzyu3hFvomRfXKH8vOFMU3OguG6oOvhXMo3xsGy3xWExqaM2dxBbVxuD99O7m3ZUFMvvscsZDqxfgMaRr/Nr1g==
 
 y18n@^4.0.0:
   version "4.0.3"

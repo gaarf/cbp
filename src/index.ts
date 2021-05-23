@@ -21,7 +21,9 @@ const accounts: Record<string, Account> = {};
 
 async function fetchAccounts() {
   const a = await cbp.rest.account.listAccounts();
-  a.forEach((o) => (accounts[o.currency] = o));
+  a.filter((o) => !o.currency.startsWith("USD")).forEach(
+    (o) => (accounts[o.currency] = o)
+  );
 }
 
 async function fetchFills(currency: string) {
@@ -47,8 +49,8 @@ async function fetchFills(currency: string) {
 async function computeAverage(this: Vorpal.CommandInstance, { coin }: Args) {
   const COIN = coin.toUpperCase();
   const account = accounts[COIN];
-  if (!account || COIN.startsWith("USD")) {
-    this.log(`❌ ${COIN} is not a traded coin!`);
+  if (!account) {
+    this.log(`❌ ${COIN} is not a supported coin!`);
     return;
   }
 
@@ -63,24 +65,13 @@ async function computeAverage(this: Vorpal.CommandInstance, { coin }: Args) {
 }
 
 cli
-  .command("list", "List all coins")
-  .action(async function (this: Vorpal.CommandInstance) {
+  .command("list", "List supported coins")
+  .option("--empty", "Include empty balance")
+  .action(async function (this: Vorpal.CommandInstance, args) {
     this.log(
       table(
-        Object.values(accounts),
-        'currency',
-        'id'
-      )
-    );
-  });
-
-cli
-  .command("balance", "List your positive balance accounts")
-  .action(async function (this: Vorpal.CommandInstance) {
-    this.log(
-      table(
-        Object.values(accounts).filter((a) =>
-          new BigNumber(a.balance).gt(0.01)
+        Object.values(accounts).filter(
+          (a) => args.options.empty || new BigNumber(a.balance).gt(0.01)
         ),
         "currency",
         "balance"
@@ -104,7 +95,7 @@ cli.command("average <coin>", "Compute average cost").action(computeAverage);
 cli.catch("<coin>").action(computeAverage);
 
 fetchAccounts().then(() => {
-  cli.log(`😎 ${Object.keys(accounts).length} accounts`);
+  cli.log(`😎 ${Object.keys(accounts).length} supported accounts`);
   const [a, b, ...c] = process.argv;
   if (c.length) {
     cli.exec(c.join(" ")).then(() => process.exit());

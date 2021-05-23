@@ -75,7 +75,8 @@ async function computeAverage(this: Vorpal.CommandInstance, args: Args) {
 }
 
 cli
-  .command("stats [coin]", "Get market information")
+  .command("market [coin]", "Display market information")
+  .alias("stats")
   .option("--euro", "Use Euros instead of US dollars")
   .action(async function (this: Vorpal.CommandInstance, args: Args) {
     const account = await getAccount.call(this, args);
@@ -89,7 +90,7 @@ cli
   });
 
 cli
-  .command("fees", "Current fee structure")
+  .command("fees", "Display current fee structure")
   .action(async function (this: Vorpal.CommandInstance) {
     this.log(table([await cbp.rest.fee.getCurrentFees()]));
   });

@@ -52,8 +52,6 @@ async function computeAverage(this: Vorpal.CommandInstance, { coin }: Args) {
     return;
   }
 
-  this.log(table([account], "currency", "hold", "available"));
-
   const fills = await fetchFills(account.currency);
   if (fills.length === 0) {
     return;

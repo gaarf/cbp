@@ -47,7 +47,7 @@ async function fetchFills(currency: string) {
 async function computeAverage(this: Vorpal.CommandInstance, { coin }: Args) {
   const COIN = coin.toUpperCase();
   const account = accounts[COIN];
-  if (!account || COIN === "USD") {
+  if (!account || COIN.startsWith("USD")) {
     this.log(`❌ ${COIN} is not a traded coin!`);
     return;
   }

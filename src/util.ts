@@ -16,39 +16,56 @@ export function table<T>(a: T[], ...keys: Array<keyof T>) {
         if (k.endsWith("_at")) {
           return new Date(o).toLocaleString();
         }
-        switch(k) {
-          case 'usd_volume':
-          case 'price':
-          case 'size':
-            return new BigNumber(o).toFormat()
-          default: {
+        switch (k) {
+          case "usd_volume":
+          case "balance":
+          case "available":
+          case "price":
+          case "hold":
+          case "size":
+            return new BigNumber(o).toFormat();
+          default:
             return o;
-          }            
         }
-
       },
     })),
-    a
+    a,
+    {
+      compact: true,
+    }
   ).render();
 }
-
 
 export function timeAgo(str: string) {
   return chalk.blue(formatDistanceToNow(new Date(str), { addSuffix: true }));
 }
 
-
-export function buyStats(fills: Fill[]) {
-  const buys = fills.filter(o => o.side === 'buy');
-  return table(buys, 'product_id', 'price', 'size', 'fee', 'usd_volume');
+function bigSum(set: Fill[], key: keyof Fill) {
+  return set.reduce(
+    (memo, one) => memo.plus(String(one[key])),
+    new BigNumber(0)
+  );
 }
 
-
-export function sellStats(fills: Fill[]) {
-  const sells = fills.filter(o => o.side === 'sell');
-  return table(sells, 'product_id', 'price', 'size', 'fee', 'usd_volume');
+function stats(fills: Fill[], side: string) {
+  const c = fills.filter((o) => o.side === side);
+  if (c.length === 0) {
+    return;
+  }
+  const size = bigSum(c, "size");
+  const fees = bigSum(c, "fee");
+  const volume = bigSum(c, "usd_volume");
+  const perCoin = volume.plus(fees).dividedBy(size);
+  const prefix = chalk.dim("$");
+  return {
+    side: chalk[side === "buy" ? "green" : "red"](side),
+    quantity: size.toFormat(),
+    volume: prefix + volume.toFormat(2),
+    fees: prefix + fees.toFormat(2),
+    average: prefix + chalk.bold(perCoin.toFormat(2)),
+  };
 }
 
-export function pricePerCoin(fills: Fill[]) {
-  return chalk.bgRed.white('FIXME');
+export function statsTable(fills: Fill[]) {
+  return table([stats(fills, "buy"), stats(fills, "sell")].filter((o) => o));
 }

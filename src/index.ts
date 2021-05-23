@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import Vorpal, { Args } from "vorpal";
 import { Account, CoinbasePro } from "coinbase-pro-node";
 import BigNumber from "bignumber.js";
-import { table, timeAgo, sellStats, buyStats, pricePerCoin } from "./util";
+import { table, timeAgo, statsTable } from "./util";
 import type { Question } from "inquirer";
 
 dotenv.config();
@@ -30,15 +30,16 @@ async function fetchFills(currency: string) {
   let result,
     after,
     hasMore = true;
+  const product = `${currency}-USD`;
   while (hasMore) {
     result = await cbp.rest.fill.getFillsByProductId(
-      `${currency}-USD`,
+      product,
       after ? { after, limit } : { limit }
     );
     output.push(...result.data);
     hasMore = result.data.length === limit;
     after = result.pagination.after;
-    cli.log(hasMore ? "fetching..." : `🐶 ${output.length} fills`);
+    cli.log(hasMore ? "fetching..." : `🐶 ${output.length} ${product} fills`);
   }
   return output;
 }
@@ -60,16 +61,7 @@ async function computeAverage(this: Vorpal.CommandInstance, { coin }: Args) {
 
   this.log("Oldest:", timeAgo(fills[fills.length - 1].created_at));
   this.log("Latest:", timeAgo(fills[0].created_at));
-
-  const buys = fills.filter(o => o.side === 'buy');
-  this.log(buyStats(buys));
-
-  const sells = fills.filter(o => o.side === 'sell');
-  if(sells.length) {
-    this.log(sellStats(sells));  
-  }
-
-  this.log(pricePerCoin(fills));  
+  this.log(statsTable(fills));
 }
 
 cli

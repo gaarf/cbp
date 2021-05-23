@@ -75,7 +75,7 @@ async function computeAverage(this: Vorpal.CommandInstance, args: Args) {
 }
 
 cli
-  .command("stats [coin]")
+  .command("stats [coin]", "Get market information")
   .option("--euro", "Use Euros instead of US dollars")
   .action(async function (this: Vorpal.CommandInstance, args: Args) {
     const account = await getAccount.call(this, args);

@@ -3,34 +3,37 @@ import BigNumber from "bignumber.js";
 import chalk from "chalk";
 import { formatDistanceToNow } from "date-fns";
 import { Fill } from "coinbase-pro-node";
+import { identity, startCase } from "lodash";
 
 export function table<T>(a: T[], ...keys: Array<keyof T>) {
   const ks = keys.length ? keys.map(String) : Object.keys(a[0]);
   return Table(
     ks.map<Table.Header>((k) => ({
       value: k,
-      width: "auto",
+      alias: startCase(k),
       align: "right",
       headerAlign: "right",
-      formatter(o) {
-        if (k.endsWith("_at")) {
-          return timeAgo(o);
-        }
-        switch (k) {
-          case "usd_volume":
-          case "balance":
-          case "available":
-          case "price":
-          case "hold":
-          case "amount":
-          case "size":
-            return new BigNumber(o).toFormat();
-          default:
-            return o;
-        }
-      },
+      width: "auto",
+      formatter: identity,
     })),
-    a,
+    a.map((o) =>
+      ks.reduce(
+        (memo, k) => ({
+          ...memo,
+          [k]: (function (v) {
+            const s = String(v);
+            if (k.endsWith("_at")) {
+              return timeAgo(s);
+            }
+            if (k.endsWith("id") || !/^[\d.]+$/.test(s)) {
+              return s;
+            }
+            return new BigNumber(s).toFormat();
+          })(o[k as keyof T]),
+        }),
+        {}
+      )
+    ),
     {
       compact: true,
     }
@@ -72,5 +75,5 @@ function stats(fills: Fill[], side: string) {
 }
 
 export function statsTable(fills: Fill[]) {
-  return table([stats(fills, "buy"), stats(fills, "sell")].filter((o) => o));
+  return table([stats(fills, "buy"), stats(fills, "sell")].filter(identity));
 }

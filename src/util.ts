@@ -28,7 +28,7 @@ export function table<T>(a: T[], ...keys: Array<keyof T>) {
             if (k.endsWith("id") || !/^[\d.]+$/.test(s)) {
               return s;
             }
-            return new BigNumber(s).toFormat();
+            return new BigNumber(s).toFormat(2, BigNumber.ROUND_UP)
           })(o[k as keyof T]),
         }),
         {}

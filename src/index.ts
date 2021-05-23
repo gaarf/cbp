@@ -66,12 +66,12 @@ async function computeAverage(this: Vorpal.CommandInstance, { coin }: Args) {
 
 cli
   .command("list", "List supported coins")
-  .option("--empty", "Include empty balance")
+  .option("--all", "Include empty balance")
   .action(async function (this: Vorpal.CommandInstance, args) {
     this.log(
       table(
         Object.values(accounts).filter(
-          (a) => args.options.empty || new BigNumber(a.balance).gt(0.01)
+          (a) => args.options.all || new BigNumber(a.balance).gt(0.01)
         ),
         "currency",
         "balance"

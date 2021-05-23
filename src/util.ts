@@ -36,7 +36,7 @@ export function table<T>(a: T[], ...keys: Array<keyof T>) {
   ).render();
 }
 
-export function timeAgo(str: string) {
+export function createdTimeAgo({ created_at: str }: Fill) {
   return chalk.blue(formatDistanceToNow(new Date(str), { addSuffix: true }));
 }
 

@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import Vorpal, { Args } from "vorpal";
 import { Account, CoinbasePro } from "coinbase-pro-node";
 import BigNumber from "bignumber.js";
-import { table, timeAgo, statsTable } from "./util";
+import { table, createdTimeAgo, statsTable } from "./util";
 import type { Question } from "inquirer";
 
 dotenv.config();
@@ -59,8 +59,8 @@ async function computeAverage(this: Vorpal.CommandInstance, { coin }: Args) {
     return;
   }
 
-  this.log("Oldest:", timeAgo(fills[fills.length - 1].created_at));
-  this.log("Latest:", timeAgo(fills[0].created_at));
+  this.log("Oldest:", createdTimeAgo(fills[fills.length - 1]));
+  this.log("Latest:", createdTimeAgo(fills[0]));
   this.log(statsTable(fills));
 }
 

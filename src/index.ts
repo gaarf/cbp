@@ -2,7 +2,14 @@ import dotenv from "dotenv";
 import Vorpal, { Args } from "vorpal";
 import { Account, CoinbasePro } from "coinbase-pro-node";
 import BigNumber from "bignumber.js";
-import { table, createdTimeAgo, statsTable } from "./util";
+import {
+  table,
+  createdTimeAgo,
+  rawStats,
+  statsFormat,
+  usdBoldNumber,
+  boldPercentage,
+} from "./util";
 
 dotenv.config();
 const { API_KEY, API_SECRET, API_PASSPHRASE } = process.env;
@@ -26,14 +33,18 @@ async function fetchAccounts() {
 }
 
 async function getAccount(this: Vorpal.CommandInstance, { coin }: Args) {
-  const COIN = (coin||'').toUpperCase() || (await this.prompt({
-    name: "coin",
-    message: "Which coin?",
-    default: "BTC",
-    filter: (o: string) => o.toUpperCase(),
-    type: "list",
-    choices: Object.keys(accounts),
-  })).coin;
+  const COIN =
+    (coin || "").toUpperCase() ||
+    (
+      await this.prompt({
+        name: "coin",
+        message: "Which coin?",
+        default: "BTC",
+        filter: (o: string) => o.toUpperCase(),
+        type: "list",
+        choices: Object.keys(accounts),
+      })
+    ).coin;
   const account = accounts[COIN];
   if (!account) {
     throw new Error(`${COIN} is not a supported coin!`);
@@ -69,14 +80,28 @@ async function computeAverage(this: Vorpal.CommandInstance, args: Args) {
     return;
   }
 
-  this.log("Latest:", createdTimeAgo(fills[0]));
-  this.log("Oldest:", createdTimeAgo(fills[fills.length - 1]));
-  this.log(statsTable(fills));
+  this.log("Latest fill:", createdTimeAgo(fills[0]));
+  this.log("Oldest fill:", createdTimeAgo(fills[fills.length - 1]));
+
+  const ticker = await cbp.rest.product.getProductTicker(
+    `${account.currency}-USD`
+  );
+
+  const buys = rawStats(fills, "buy");
+  const sells = rawStats(fills, "sell");
+
+  this.log(table([statsFormat(buys), ...(sells ? [statsFormat(sells)] : [])]));
+
+  const price = new BigNumber(ticker.price);
+  this.log("\nMarket:", usdBoldNumber(price));
+
+  if (buys) {
+    this.log("Change:", boldPercentage(buys.average, price));
+  }
 }
 
 cli
   .command("market [coin]", "Display market information")
-  .alias("stats")
   .option("--euro", "Use Euros instead of US dollars")
   .action(async function (this: Vorpal.CommandInstance, args: Args) {
     const account = await getAccount.call(this, args);

@@ -25,10 +25,10 @@ export function table<T>(a: T[], ...keys: Array<keyof T>) {
             if (k.endsWith("_at")) {
               return timeAgo(s);
             }
-            if (k.endsWith("id") || !/^[\d.]+$/.test(s)) {
-              return s;
+            if (/^[\d.]+$/.test(s) || k.endsWith("id")) {
+              return numberFormat(s);
             }
-            return new BigNumber(s).toFormat(2, BigNumber.ROUND_UP)
+            return s;
           })(o[k as keyof T]),
         }),
         {}
@@ -38,6 +38,23 @@ export function table<T>(a: T[], ...keys: Array<keyof T>) {
       compact: true,
     }
   ).render();
+}
+
+const USD_PREFIX = chalk.dim("$");
+const PCT_SUFFIX = chalk.dim("%");
+
+export function usdBoldNumber(input: string | BigNumber) {
+  return USD_PREFIX + chalk.bold(numberFormat(input));
+}
+
+export function boldPercentage(a: BigNumber, b: BigNumber) {
+  const pct = b.minus(a).dividedBy(a).multipliedBy(100);
+  return chalk[pct.gt(0) ? "green" : "red"].bold(pct.toFormat(0)) + PCT_SUFFIX;
+}
+
+function numberFormat(input: string | BigNumber) {
+  const b = new BigNumber(input);
+  return b.toFormat(b.gt(1000) ? 0 : 4);
 }
 
 function timeAgo(str: string) {
@@ -55,25 +72,33 @@ function bigSum(set: Fill[], key: keyof Fill) {
   );
 }
 
-function stats(fills: Fill[], side: string) {
+export function rawStats(fills: Fill[], side: string) {
   const c = fills.filter((o) => o.side === side);
   if (c.length === 0) {
     return;
   }
-  const size = bigSum(c, "size");
+  const quantity = bigSum(c, "size");
   const fees = bigSum(c, "fee");
   const volume = bigSum(c, "usd_volume");
-  const perCoin = volume.plus(fees).dividedBy(size);
-  const prefix = chalk.dim("$");
+  const average = volume.plus(fees).dividedBy(quantity);
   return {
-    side: chalk[side === "buy" ? "green" : "red"](side),
-    quantity: size.toFormat(),
-    volume: prefix + volume.toFormat(2),
-    fees: prefix + fees.toFormat(2),
-    average: prefix + chalk.bold(perCoin.toFormat(2)),
+    side,
+    quantity,
+    volume,
+    fees,
+    average,
   };
 }
 
-export function statsTable(fills: Fill[]) {
-  return table([stats(fills, "buy"), stats(fills, "sell")].filter(identity));
+export function statsFormat(input: ReturnType<typeof rawStats>) {
+  return (
+    input && {
+      ...input,
+      side: chalk[input.side === "buy" ? "green" : "red"](input.side),
+      quantity: input.quantity.toFormat(),
+      volume: USD_PREFIX + input.volume.toFormat(0),
+      fees: USD_PREFIX + input.fees.toFormat(2),
+      average: usdBoldNumber(input.average.toPrecision(4)),
+    }
+  );
 }

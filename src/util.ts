@@ -54,6 +54,9 @@ export function boldPercentage(a: BigNumber, b: BigNumber) {
 
 function numberFormat(input: string | BigNumber) {
   const b = new BigNumber(input);
+  if(b.isEqualTo(b.integerValue())) {
+    return b.toFormat(0);
+  }
   return b.toFormat(b.gt(1000) ? 0 : 4);
 }
 
@@ -80,7 +83,7 @@ export function rawStats(fills: Fill[], side: string) {
   const quantity = bigSum(c, "size");
   const fees = bigSum(c, "fee");
   const volume = bigSum(c, "usd_volume");
-  const average = volume.plus(fees).dividedBy(quantity);
+  const average = volume[side === 'buy' ? 'plus' : 'minus'](fees).dividedBy(quantity);
   return {
     side,
     quantity,

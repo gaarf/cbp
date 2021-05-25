@@ -80,6 +80,7 @@ async function computeAverage(this: Vorpal.CommandInstance, args: Args) {
     return;
   }
 
+  this.log("");
   this.log("Latest fill:", createdTimeAgo(fills[0]));
   this.log("Oldest fill:", createdTimeAgo(fills[fills.length - 1]));
 
@@ -96,8 +97,13 @@ async function computeAverage(this: Vorpal.CommandInstance, args: Args) {
   this.log("\nMarket:", usdBoldNumber(price));
 
   if (buys) {
-    this.log("Change:", boldPercentage(buys.average, price));
+    this.log(
+      "Change:",
+      buys.average > price ? "😭" : "📈",
+      boldPercentage(buys.average, price)
+    );
   }
+  this.log("");
 }
 
 cli
@@ -153,5 +159,6 @@ fetchAccounts().then(() => {
   } else {
     cli.log(`😎 ${Object.keys(accounts).length} accounts`);
     cli.delimiter("cbp$").show();
+    cli.log("")
   }
 });

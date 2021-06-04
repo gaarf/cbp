@@ -6,7 +6,8 @@ import { Fill } from "coinbase-pro-node";
 import { identity, startCase } from "lodash";
 
 export function table<T>(a: T[], ...keys: Array<keyof T>) {
-  const ks = keys.length ? keys.map(String) : Object.keys(a[0]);
+  const rows = a.filter(identity)
+  const ks = keys.length ? keys.map(String) : Object.keys(rows[0]);
   return Table(
     ks.map<Table.Header>((k) => ({
       value: k,
@@ -16,7 +17,7 @@ export function table<T>(a: T[], ...keys: Array<keyof T>) {
       width: "auto",
       formatter: identity,
     })),
-    a.map((o) =>
+    rows.map((o) =>
       ks.reduce(
         (memo, k) => ({
           ...memo,

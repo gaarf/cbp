@@ -91,7 +91,7 @@ async function computeAverage(this: Vorpal.CommandInstance, args: Args) {
   const buys = rawStats(fills, "buy");
   const sells = rawStats(fills, "sell");
 
-  this.log(table([statsFormat(buys), ...(sells ? [statsFormat(sells)] : [])]));
+  this.log(table([statsFormat(buys), statsFormat(sells)]));
 
   const price = new BigNumber(ticker.price);
   this.log("\nMarket:", usdBoldNumber(price));
@@ -99,7 +99,7 @@ async function computeAverage(this: Vorpal.CommandInstance, args: Args) {
   if (buys) {
     this.log(
       "Change:",
-      buys.average > price ? "😭" : "📈",
+      buys.average.gt(price) ? "😭" : "📈",
       boldPercentage(buys.average, price)
     );
   }

@@ -8,6 +8,7 @@ import {
   rawStats,
   statsFormat,
   usdBoldNumber,
+  numberFormat,
   boldPercentage,
 } from "./util";
 
@@ -94,7 +95,13 @@ async function computeAverage(this: Vorpal.CommandInstance, args: Args) {
   this.log(table([statsFormat(buys), statsFormat(sells)]));
 
   const price = new BigNumber(ticker.price);
-  this.log("\nMarket:", usdBoldNumber(price));
+
+  this.log(
+    "\nMarket:",
+    usdBoldNumber(price),
+    `* ${numberFormat(account.balance)} =`,
+    usdBoldNumber(price.multipliedBy(account.balance))
+  );
 
   if (buys) {
     this.log(
@@ -159,6 +166,6 @@ fetchAccounts().then(() => {
   } else {
     cli.log(`😎 ${Object.keys(accounts).length} accounts`);
     cli.delimiter("cbp$").show();
-    cli.log("")
+    cli.log("");
   }
 });

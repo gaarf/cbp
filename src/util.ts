@@ -53,7 +53,7 @@ export function boldPercentage(a: BigNumber, b: BigNumber) {
   return chalk[pct.gt(0) ? "green" : "red"].bold(pct.toFormat(0)) + PCT_SUFFIX;
 }
 
-function numberFormat(input: string | BigNumber) {
+export function numberFormat(input: string | BigNumber) {
   const b = new BigNumber(input);
   if(b.isEqualTo(b.integerValue())) {
     return b.toFormat(0);

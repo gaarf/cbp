@@ -148,6 +148,36 @@ cli
     );
   });
 
+cli
+  .command("value", "Value accounts")
+  .action(async function (this: Vorpal.CommandInstance, args) {
+    const data = Object.values(accounts).filter((a) =>
+      new BigNumber(a.balance).gt(0.01)
+    );
+
+    const prices = await Promise.all(
+      data.map((account) =>
+        cbp.rest.product.getProductTicker(`${account.currency}-USD`)
+      )
+    ).then((tickers) => tickers.map((ticker) => new BigNumber(ticker.price)));
+
+    this.log(
+      table(
+        data.map((account, index) => ({
+          ...account,
+          price: usdBoldNumber(prices[index]),
+          marketValue: usdBoldNumber(
+            prices[index].multipliedBy(account.balance)
+          ),
+        })),
+        "currency",
+        "balance",
+        "price",
+        "marketValue"
+      )
+    );
+  });
+
 cli.command("average [coin]", "Compute average cost").action(computeAverage);
 
 cli.catch("<coin>").action(async function (this: Vorpal.CommandInstance, args) {

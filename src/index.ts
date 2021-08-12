@@ -163,16 +163,18 @@ cli
 
     this.log(
       table(
-        data.map((account, index) => ({
-          ...account,
-          price: usdBoldNumber(prices[index]),
-          marketValue: usdBoldNumber(
-            prices[index].multipliedBy(account.balance)
-          ),
-        })),
+        data
+          .map((account, index) => ({
+            ...account,
+            marketValue: prices[index].multipliedBy(account.balance),
+          }))
+          .sort((a, b) => b.marketValue.comparedTo(a.marketValue))
+          .map((account) => ({
+            ...account,
+            marketValue: usdBoldNumber(account.marketValue),
+          })),
         "currency",
         "balance",
-        "price",
         "marketValue"
       )
     );

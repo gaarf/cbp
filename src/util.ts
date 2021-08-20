@@ -6,7 +6,7 @@ import { Fill } from "coinbase-pro-node";
 import { identity, startCase } from "lodash";
 
 export function table<T>(a: T[], ...keys: Array<keyof T>) {
-  const rows = a.filter(identity)
+  const rows = a.filter(identity);
   const ks = keys.length ? keys.map(String) : Object.keys(rows[0]);
   return Table(
     ks.map<Table.Header>((k) => ({
@@ -53,12 +53,12 @@ export function boldPercentage(a: BigNumber, b: BigNumber) {
   return chalk[pct.gt(0) ? "green" : "red"].bold(pct.toFormat(0)) + PCT_SUFFIX;
 }
 
-function numberFormat(input: string | BigNumber) {
+export function numberFormat(input: string | BigNumber) {
   const b = new BigNumber(input);
-  if(b.isEqualTo(b.integerValue())) {
+  if (b.isEqualTo(b.integerValue())) {
     return b.toFormat(0);
   }
-  return b.toFormat(b.gt(1000) ? 0 : 4);
+  return b.toFormat(b.gt(100) ? 0 : b.gt(1) ? 2 : 4);
 }
 
 function timeAgo(str: string) {
@@ -84,7 +84,8 @@ export function rawStats(fills: Fill[], side: string) {
   const quantity = bigSum(c, "size");
   const fees = bigSum(c, "fee");
   const volume = bigSum(c, "usd_volume");
-  const average = volume[side === 'buy' ? 'plus' : 'minus'](fees).dividedBy(quantity);
+  const average =
+    volume[side === "buy" ? "plus" : "minus"](fees).dividedBy(quantity);
   return {
     side,
     quantity,

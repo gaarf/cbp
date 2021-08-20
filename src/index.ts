@@ -8,6 +8,7 @@ import {
   rawStats,
   statsFormat,
   usdBoldNumber,
+  numberFormat,
   boldPercentage,
 } from "./util";
 
@@ -94,7 +95,13 @@ async function computeAverage(this: Vorpal.CommandInstance, args: Args) {
   this.log(table([statsFormat(buys), statsFormat(sells)]));
 
   const price = new BigNumber(ticker.price);
-  this.log("\nMarket:", usdBoldNumber(price));
+
+  this.log(
+    "\nMarket:",
+    usdBoldNumber(price),
+    `* ${numberFormat(account.balance)} =`,
+    usdBoldNumber(price.multipliedBy(account.balance))
+  );
 
   if (buys) {
     this.log(
@@ -141,6 +148,38 @@ cli
     );
   });
 
+cli
+  .command("value", "Value accounts")
+  .action(async function (this: Vorpal.CommandInstance, args) {
+    const data = Object.values(accounts).filter((a) =>
+      new BigNumber(a.balance).gt(0.01)
+    );
+
+    const prices = await Promise.all(
+      data.map((account) =>
+        cbp.rest.product.getProductTicker(`${account.currency}-USD`)
+      )
+    ).then((tickers) => tickers.map((ticker) => new BigNumber(ticker.price)));
+
+    this.log(
+      table(
+        data
+          .map((account, index) => ({
+            ...account,
+            marketValue: prices[index].multipliedBy(account.balance),
+          }))
+          .sort((a, b) => b.marketValue.comparedTo(a.marketValue))
+          .map((account) => ({
+            ...account,
+            marketValue: usdBoldNumber(account.marketValue),
+          })),
+        "currency",
+        "balance",
+        "marketValue"
+      )
+    );
+  });
+
 cli.command("average [coin]", "Compute average cost").action(computeAverage);
 
 cli.catch("<coin>").action(async function (this: Vorpal.CommandInstance, args) {
@@ -159,6 +198,6 @@ fetchAccounts().then(() => {
   } else {
     cli.log(`😎 ${Object.keys(accounts).length} accounts`);
     cli.delimiter("cbp$").show();
-    cli.log("")
+    cli.log("");
   }
 });
